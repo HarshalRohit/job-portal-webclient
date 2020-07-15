@@ -1,0 +1,24 @@
+.jobspage-container {  
+    padding: 0 16px;
+    width: 100%;
+    max-width: 976px;
+    
+    /* background-color: chocolate; */
+    margin: 0;
+    /* justify-self: center;
+    ali
+    display: flex; */
+}
+
+
+
+
+
+.layout-content {
+    /* padding: 5px 0; */
+    /* margin: auto 0; */
+    display: flex;
+    justify-content: center;
+    
+    /* background-color: chartreuse; */
+}

@@ -1,4 +1,9 @@
+@import '~antd/dist/antd.css';
 .App {
+  min-height: 100vh;
+  display: flex;
+}
+/* .App {
   text-align: center;
 }
 
@@ -14,7 +19,7 @@
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #d14a89;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -35,4 +40,4 @@
   to {
     transform: rotate(360deg);
   }
-}
+} */
