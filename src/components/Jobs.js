@@ -8,21 +8,27 @@ import {
     Input, 
     Upload,
     notification,
+    Progress,
 } from 'antd';
 
 const { Meta } = Card;
 const serverUrl = `https://abracadabrant-livre-16709.herokuapp.com`;
-// const serverUrl = 'http://localhost:3002';
+
+const axios = require('axios').default;
+
+
 const ModalApplyJob = (props) => {
 
-    const { jobObj, visible, chngVisibility } = props;
+    const { jobObj, visible, setJobModalVisibility } = props;
   
-    const url = `${serverUrl}/api/jobs/apply/${jobObj._id}`;
+    const applyURL = `${serverUrl}/api/jobs/apply/${jobObj._id}`;
   
-    const [ form ] = Form.useForm();
+    const [ form ]  = Form.useForm();
     const [ loading, setLoading ] = useState(false);
     const [ files, setFiles ] = useState([]);
     const [ disableUploadBtn, setUploadBtnDisablity ] = useState(false);
+    const [ isProgBarHidden, chngProgBarVisibility ] = useState(true);
+    const [ uploadPercent, setUploadPercent ] = useState(0);
   
     const uploadBtnProps = {
       accept: '.pdf, application/pdf',
@@ -107,7 +113,12 @@ const ModalApplyJob = (props) => {
       };
   
       return fd;
-    }
+    };
+
+    const setProgBarPercent = (e) => {
+      const t = Number.parseInt(e.loaded / e.total * 100) ;
+      setUploadPercent(t);
+    };
   
     const handleFormSubmit = async (values) => {
       
@@ -118,6 +129,7 @@ const ModalApplyJob = (props) => {
             Please try again later.`
         });
       };
+
       const successNotification = () => {
         notification.success({
           message: 'Success!',
@@ -126,27 +138,26 @@ const ModalApplyJob = (props) => {
       };
   
       const formdata = createAndPopulateFormData(values);
-  
-      const reqOpts = {
-        method: 'POST',
-        body: formdata,
-        redirect: 'follow'
-      };
-          
+
+      chngProgBarVisibility(false);
+
       try {
-        const response = await fetch(url, reqOpts);
-        if(!response.ok){
-          errorNotification();
-        } else {
-          successNotification();
-        }
-  
-        setLoading(false);
+        await axios.post(
+          applyURL,
+          formdata,
+          {
+            onUploadProgress: setProgBarPercent
+          }
+        );
+        
+        successNotification();
       } catch (error) {
-        setLoading(false);
+        
         errorNotification();
-        console.error('There has been a problem with your fetch operation:', error);
       }
+
+      // setProgVisibility(false);
+      setLoading(false);
   
     };
   
@@ -154,18 +165,28 @@ const ModalApplyJob = (props) => {
       try {
         setLoading(true);
         await form.validateFields();
+
+        const temp = form.getFieldsValue(['name', 'contact', 'resume']);
+        console.log(temp);
         
         form.submit();
+        console.log('This should be called after form submit success!!');
       } catch (error) {
         setLoading(false);
       }
               
     };
   
+    /* Reset the modal
+      Ideally should reset on react unmount but i guess
+        i am not able to do that
+     */
     const handleModalCancel = () => {
       form.resetFields();
       setUploadBtnDisablity(false);
-      chngVisibility(false);
+      setJobModalVisibility(false);
+      chngProgBarVisibility(true);
+      setUploadPercent(0);
     };
   
     
@@ -202,6 +223,10 @@ const ModalApplyJob = (props) => {
             </Upload>
           </Form.Item>
         </Form>
+        <div hidden={isProgBarHidden}>
+          <h4>Uploading...</h4>
+          <Progress percent={uploadPercent} />
+        </div>
       </div>
     );
   
@@ -237,17 +262,17 @@ const ModalApplyJob = (props) => {
       </>
     );
     
-    const [ showJobModal, chngJobModalVisibility ] = useState(false);
+    const [ showJobModal, setJobModalVisibility ] = useState(false);
   
     const ActionApplyJob = (
       <>
-        <Button type='primary' onClick={() => chngJobModalVisibility(true)} >
+        <Button type='primary' onClick={() => setJobModalVisibility(true)} >
           Apply for this Job
         </Button>
         <ModalApplyJob 
           jobObj={jobObj}
           visible={showJobModal}
-          chngVisibility={chngJobModalVisibility} 
+          setJobModalVisibility={setJobModalVisibility} 
         />
       </>
     );
