@@ -1,20 +1,12 @@
-## Links
-+ **[unread]** https://create-react-app.dev/docs/folder-structure
-+ https://dev.to/domysee/keeping-the-footer-at-the-bottom-with-css-flexbox-5h5f
-+ ANTD docs
-+ https://codetheweb.blog/fullscreen-image-hero/
+# Community Job Portal - Web client
 
-### Project structure
-+ **[unread]** https://medium.com/@alexmngn/how-to-better-organize-your-react-applications-2fd3ea1920f1
+A SPA to list available jobs, apply for them and show information about people behind the initiative.
+[Demo](https://dashboard.heroku.com/apps/supermarche-moliere-39702/settings)
 
-## Important
-+ to start app
-    `npm start`
-
-## Things learnt
+## Learnings
++ React Application project structure
++ utlise antd-react to build the UI
 
 
-## Things to do
-
-## Things to understand
-
+## License
+[MIT](https://choosealicense.com/licenses/mit/)

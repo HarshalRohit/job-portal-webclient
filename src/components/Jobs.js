@@ -10,13 +10,13 @@ import {
   notification,
   Progress,
 } from 'antd';
-
 const axios = require('axios').default;
 
 const { Meta } = Card;
 const serverUrl = `https://abracadabrant-livre-16709.herokuapp.com`;
-const notificationDuration = 10;
+const antdNotificationDuration = 10;
 
+/* TODO: refactor this */
 const FormApplyJob = (props) => {
 
   const {
@@ -136,19 +136,17 @@ const FormApplyJob = (props) => {
 
 const ModalApplyJob = (props) => {
 
-  const { jobObj, visible, setModalVisibility } = props;
-
-  const applyJobURL = `${serverUrl}/api/jobs/apply/${jobObj._id}`;
+  const { jobObj, visible, setIsModalVisible } = props;
 
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
-  const [isUploadBtnDisabled, chngUploadBtnDisability] = useState(false);
-  const [isProgBarHidden, chngProgBarVisibility] = useState(true);
+  const [isReqProcessing, setIsReqProcessing] = useState(false);
+  const [isUploadBtnDisabled, SetIsUploadBtnDisabled] = useState(false);
+  const [isProgBarHidden, setIsProgBarHidden] = useState(true);
   const [uploadPercent, setUploadPercent] = useState(0);
 
   const setProgressBarVal = (e) => {
-    const t = Number.parseInt(e.loaded / e.total * 100);
-    setUploadPercent(t);
+    const uploadPercent = Number.parseInt(e.loaded / e.total * 100);
+    setUploadPercent(uploadPercent);
   };
 
   const createAndPopulateNativeForm = (form) => {
@@ -167,13 +165,12 @@ const ModalApplyJob = (props) => {
   };
 
   const handleFormSubmit = async (values) => {
-
     const errorNotification = () => {
       notification.error({
         message: 'Aww! some error occured!!',
         description: `Sorry, your application could not be processed.
           Please try again later.`,
-        duration: notificationDuration,
+        duration: antdNotificationDuration,
       });
     };
 
@@ -181,23 +178,16 @@ const ModalApplyJob = (props) => {
       notification.success({
         message: 'Success!',
         description: `We have received your application.`,
-        duration: notificationDuration,
+        duration: antdNotificationDuration,
       });
     };
-
+    
+    const applyJobURL = `${serverUrl}/api/jobs/apply/${jobObj._id}`;
     const formdata = createAndPopulateNativeForm(form);
-
-    chngProgBarVisibility(false);
+    const axiosOpts = { onUploadProgress: setProgressBarVal };
 
     try {
-      await axios.post(
-        applyJobURL,
-        formdata,
-        {
-          onUploadProgress: setProgressBarVal
-        }
-      );
-
+      await axios.post(applyJobURL, formdata, axiosOpts);
       successNotification();
     } catch (error) {
       errorNotification();
@@ -206,18 +196,19 @@ const ModalApplyJob = (props) => {
 
 
   const handleModalOk = async () => {
-    setLoading(true);
+    setIsReqProcessing(true);
 
     try {
       await form.validateFields();
 
+      setIsProgBarHidden(false);
+
       await handleFormSubmit();
     } catch (error) {
-      /* TODO: THink on how to handle this on UI */
-      console.log(error);
+      console.log('form validatation error', error);
     }
 
-    setLoading(false);
+    setIsReqProcessing(false);
   };
 
   /* Reset the modal
@@ -226,9 +217,9 @@ const ModalApplyJob = (props) => {
     */
   const handleModalCancel = () => {
     form.resetFields();
-    chngUploadBtnDisability(false);
-    setModalVisibility(false);
-    chngProgBarVisibility(true);
+    SetIsUploadBtnDisabled(false);
+    setIsModalVisible(false);
+    setIsProgBarHidden(true);
     setUploadPercent(0);
   };
 
@@ -237,14 +228,13 @@ const ModalApplyJob = (props) => {
     <div disabled={true}>
       <h3>{jobObj.jobTitle}</h3>
       <h4>{jobObj.company} - {jobObj.location}</h4>
-      {/* <hr /> */}
       <FormApplyJob
         form={form}
         isUploadBtnDisabled={isUploadBtnDisabled}
-        chngUploadBtnDisability={chngUploadBtnDisability}
+        chngUploadBtnDisability={SetIsUploadBtnDisabled}
       />
       <div hidden={isProgBarHidden}>
-        <h4>Uploading...</h4>
+        <h4>Resume upload progress: </h4>
         <Progress percent={uploadPercent} />
       </div>
     </div>
@@ -257,10 +247,9 @@ const ModalApplyJob = (props) => {
     onOk: handleModalOk,
     onCancel: handleModalCancel,
     maskClosable: false,
-    confirmLoading: loading,
+    confirmLoading: isReqProcessing,
     closable: false,
-    cancelButtonProps: { disabled: loading },
-    // okButtonProps: {disabled: !disableUploadBtn}
+    cancelButtonProps: { disabled: isReqProcessing },
     okText: 'Submit',
     cancelText: 'Return',
   };
@@ -275,6 +264,21 @@ const ModalApplyJob = (props) => {
 /* List Item component */
 function CardJob(props) {
   const { jobObj } = props;
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const ActionApplyJob = (
+    <>
+      <Button type='primary' onClick={() => setIsModalVisible(true)} >
+        Apply for this Job
+      </Button>
+      <ModalApplyJob
+        jobObj={jobObj}
+        visible={isModalVisible}
+        setIsModalVisible={setIsModalVisible}
+      />
+    </>
+  );
+
   const cardDesc = (
     <>
       <h4>{jobObj.company} - {jobObj.location}</h4>
@@ -282,25 +286,10 @@ function CardJob(props) {
     </>
   );
 
-  const [isModalVisible, setModalVisibility] = useState(false);
-
-  const ActionApplyJob = (
-    <>
-      <Button type='primary' onClick={() => setModalVisibility(true)} >
-        Apply for this Job
-      </Button>
-      <ModalApplyJob
-        jobObj={jobObj}
-        visible={isModalVisible}
-        setModalVisibility={setModalVisibility}
-      />
-    </>
-  );
   return (
     <Card
       style={{ minWidth: '100%' }}
       actions={[ActionApplyJob]}
-    // actions={[<ApplyJob job={jobObj} />]}
     >
       <Meta
         title={<h3><strong>{jobObj.jobTitle}</strong></h3>}
@@ -363,7 +352,6 @@ function JobsPage() {
         />
       </div>
     </div>
-
   );
 };
 
