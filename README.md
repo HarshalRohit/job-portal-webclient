@@ -1,4 +1,4 @@
-# Job Search Portal - Web client
+# Job Search Portal
 
 A SPA to list available jobs, apply for them and show information about people behind the initiative.
 [Demo](https://dashboard.heroku.com/apps/supermarche-moliere-39702/settings)
